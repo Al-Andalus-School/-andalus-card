@@ -16,6 +16,7 @@
 :root{--primary:#218a8d;--ink:#083f52;--soft:#a0c2c4;--tint:#eef6f6;--bg:#f6f9fa;--line:#d9e5e8;--font:'IBM Plex Sans Arabic',sans-serif;--r:12px}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
+html,body{max-width:100%;overflow-x:hidden}
 body{margin:0;background:var(--bg);color:#24353d;font-family:var(--font);font-size:15px;line-height:1.7}
 [hidden]{display:none!important}
 .wrap{max-width:1280px;margin:0 auto;padding:0 20px}
@@ -79,6 +80,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 .f textarea{resize:vertical;min-height:96px}
 .f input[data-k][inputmode]{text-align:right}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.trio{display:grid;grid-template-columns:1fr 1.6fr 1.1fr;gap:8px;margin-bottom:8px}
+.datebox select{width:100%;min-width:0}
+.dayname{margin:0 0 8px;padding:9px 12px;background:var(--tint);border:1px dashed var(--soft);border-radius:10px;color:#6b8088;font-size:14px}
+.dayname.on{border-style:solid;color:var(--ink);font-weight:700}
+.split>*,.f{min-width:0}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .chk{display:flex!important;align-items:center;gap:8px;margin:0!important;font-weight:500!important;border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;background:#fbfdfd}
 .chk:has(input:checked){border-color:var(--primary);background:var(--tint)}
@@ -140,7 +146,7 @@ dialog div{display:flex;gap:8px;justify-content:flex-start}
 .c-table th{background:var(--tint);color:var(--ink);font-weight:700;text-align:right;font-size:14px;border-inline-end:1px solid #b9ccd1}
 .c-table td:not(:last-child){border-inline-end:1px solid #b9ccd1}
 .c-table tr.tall td{height:140px;vertical-align:top;padding-top:10px;line-height:1.75}
-.dp{display:inline-block;min-width:150px;margin-inline-end:28px}
+.dp{display:inline-block;margin-inline-end:22px;white-space:nowrap}
 .dp i{font-style:normal;color:#4b6068;font-weight:600}
 .cks{display:flex;flex-wrap:wrap;gap:8px 24px}
 .ck{display:inline-flex;align-items:center;gap:8px;font-size:14.5px}
@@ -160,12 +166,20 @@ dialog div{display:flex;gap:8px;justify-content:flex-start}
 
 /* تجاوب */
 @media (max-width:980px){
-  .split{grid-template-columns:1fr}
+  .split{grid-template-columns:minmax(0,1fr)}
   .preview-panel{position:static}
   .frame{max-height:none}
   .zoom{display:inline-flex}
 }
 @media (max-width:560px){
+  body{font-size:16px}
+  .f label{font-size:15.5px}
+  .f input[type=text],.f input:not([type]),.f select,.f textarea{font-size:16px;padding:13px 12px}
+  .chk{padding:12px;font-size:16px}
+  .btn{font-size:15px;padding:12px 16px}
+  .grp legend{font-size:17px}
+  .ed-head h1{font-size:20px}
+  .trio{grid-template-columns:.8fr 1.3fr 1fr}
   .wrap{padding:0 14px}
   .hero{padding:36px 0 24px}.hero h1{font-size:26px}
   .grp .grid,.checks{grid-template-columns:1fr}
@@ -182,6 +196,16 @@ dialog div{display:flex;gap:8px;justify-content:flex-start}
   body>*:not(#printRoot){display:none!important}
   #printRoot{display:block}
   #printRoot .card{position:static;transform:none;box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact;page-break-after:avoid}
+}
+
+/* إصلاح اتساع الصفحة على الجوال (لوحات التوقيع والحقول لا تتجاوز عرض الشاشة) */
+.pads{grid-template-columns:minmax(0,1fr)}
+.padbox{min-width:0}
+.pad{max-width:100%}
+.grp .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:560px){
+  .grp .grid,.checks{grid-template-columns:minmax(0,1fr)}
+  html,body{overflow-x:hidden}
 }
 </style>
 </head>
@@ -271,9 +295,13 @@ const THEME = {
 
 // القوائم المنسدلة
 const LISTS = {
-  days: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'],
-  weeks: Array.from({ length: 19 }, (_, i) => String(i + 1)),
-  semesters: ['الفصل الدراسي الأول', 'الفصل الدراسي الثاني', 'الفصل الدراسي الثالث'],
+  weekdays: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'], // يظهر اليوم تلقائياً من التاريخ
+  // الأسابيع بالحروف (الأول … التاسع عشر)
+  weeks: ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر',
+    'الثاني عشر', 'الثالث عشر', 'الرابع عشر', 'الخامس عشر', 'السادس عشر', 'السابع عشر', 'الثامن عشر', 'التاسع عشر'],
+  hijriMonths: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'],
+  hijriYears: [1448, 1449], // السنوات الهجرية المسموحة في التواريخ
+  semesters: ['الفصل الدراسي الأول', 'الفصل الدراسي الثاني'], // فصلان فقط
   grades: ['الأول الثانوي', 'الثاني الثانوي', 'الثالث الثانوي', 'جميع الصفوف'],
   domains: ['العلوم والتقنية', 'المواطنة والحياة', 'الثقافة والفنون', 'النشاط الكشفي', 'الرياضة والصحة',
     'الأيام والمناسبات', 'المسابقات', 'الفترات اللاصفية - الحضور والاصطفاف الصباحي',
@@ -340,9 +368,58 @@ const CARD_TYPES = {
     },
     rows: [['name'], ['domain'], ['sessions'], ['semester'], ['start'], ['end'], ['grade'], ['teacher'],
       ['students', 'winners'], ['qualified', 'awards'], ['parents', 'disabled'], ['outcomes']],
-    signatures: [{ role: 'المعلم المنفذ', from: 'teacher' }, { role: 'رائد النشاط', fixed: 'activityLeader', manual: true }, { role: 'مدير المدرسة', fixed: 'principal' }]
+    signatures: [{ role: 'المعلم المنفذ', from: 'teacher' }, { role: 'رائد النشاط', fixed: 'activityLeader', manual: true }, { role: 'مدير المدرسة', fixed: 'principal', manual: true }]
   }
 };
+
+/* =====================================================================
+   التقويم الهجري (أم القرى): يحسب اسم اليوم وعدد أيام كل شهر
+   السنوات المسموحة تُضبط من LISTS.hijriYears في config.js
+   ===================================================================== */
+const HIJRI = (function () {
+  const years = LISTS.hijriYears, minY = Math.min.apply(null, years), maxY = Math.max.apply(null, years);
+  let fmt = null;
+  try { fmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'UTC' }); } catch (e) { fmt = null; }
+
+  // حساب جدولي احتياطي إذا لم يدعم المتصفح تقويم أم القرى
+  function tabular(jd) {
+    let l = jd - 1948440 + 10632;
+    const n = Math.floor((l - 1) / 10631);
+    l = l - 10631 * n + 354;
+    const j = Math.floor((10985 - l) / 5316) * Math.floor(50 * l / 17719) + Math.floor(l / 5670) * Math.floor(43 * l / 15238);
+    l = l - Math.floor((30 - j) / 15) * Math.floor(17719 * j / 50) - Math.floor(j / 16) * Math.floor(15238 * j / 43) + 29;
+    const m = Math.floor(24 * l / 709);
+    return [30 * n + j - 30, m, l - Math.floor(709 * m / 24)];
+  }
+  function hijriOf(ms) {
+    if (fmt) {
+      try {
+        const p = fmt.formatToParts(ms), g = t => +(p.find(x => x.type === t) || {}).value;
+        const y = g('year'), m = g('month'), d = g('day');
+        if (y > 1000 && m >= 1 && m <= 12 && d >= 1 && d <= 30) return [y, m, d];
+      } catch (e) { }
+    }
+    return tabular(Math.floor(ms / 864e5) + 2440588);
+  }
+
+  // بناء جدول التواريخ المسموحة مرة واحدة
+  const map = {}, maxDays = {};
+  const startMs = Date.UTC(Math.floor(minY * 0.970229 + 621.5744) - 1, 0, 1);
+  const endMs = Date.UTC(Math.floor((maxY + 1) * 0.970229 + 621.5744) + 2, 0, 1);
+  for (let ms = startMs, i = 0; ms < endMs; ms += 864e5, i++) {
+    const h = hijriOf(ms);
+    if (h[0] < minY || h[0] > maxY || years.indexOf(h[0]) < 0) continue;
+    map[h.join('-')] = { wd: new Date(ms).getUTCDay(), ord: i };
+    const k = h[0] + '-' + h[1];
+    maxDays[k] = Math.max(maxDays[k] || 0, h[2]);
+  }
+  return {
+    // معلومات تاريخ: رقم يوم الأسبوع (0 = الأحد) وترتيبه، أو null إذا كان التاريخ غير صالح
+    info: (y, m, d) => map[y + '-' + m + '-' + d] || null,
+    // عدد أيام الشهر
+    maxDay: (y, m) => maxDays[y + '-' + m] || 30
+  };
+})();
 
 /* =====================================================================
    منطق التطبيق: الواجهة، المعاينة، الحفظ، التصدير
@@ -420,7 +497,7 @@ const CARD_TYPES = {
 
   /* ---------- النموذج ---------- */
   const emptyData = t => Object.assign(
-    Object.fromEntries(Object.entries(t.fields).map(([k, f]) => [k, f.type === 'date' ? { day: '', week: '' } : f.type === 'checks' ? [] : ''])),
+    Object.fromEntries(Object.entries(t.fields).map(([k, f]) => [k, f.type === 'date' ? { y: '', m: '', d: '', week: '' } : f.type === 'checks' ? [] : ''])),
     Object.fromEntries(t.signatures.map((s, i) => ['sig_' + i, '']))); // sig_N = صورة التوقيع المرسوم
   const okSig = u => typeof u === 'string' && u.indexOf('data:image/png;base64,') === 0;
   const opts = a => a.map(o => `<option>${esc(o)}</option>`).join('');
@@ -428,13 +505,39 @@ const CARD_TYPES = {
     const id = 'f_' + k;
     switch (f.type) {
       case 'select': return `<select id="${id}" data-k="${k}"><option value="">اختر ${esc(f.label)}</option>${opts(f.options)}</select>`;
-      case 'date': return `<div class="duo"><select data-k="${k}" data-s="day" aria-label="اليوم"><option value="">اليوم</option>${opts(LISTS.days)}</select><select data-k="${k}" data-s="week" aria-label="الأسبوع"><option value="">الأسبوع</option>${opts(LISTS.weeks)}</select></div>`;
+      case 'date': return `<div class="datebox">
+        <div class="trio"><select data-k="${k}" data-s="d" aria-label="يوم الشهر"><option value="">اليوم</option>${Array.from({ length: 30 }, (_, i) => `<option>${i + 1}</option>`).join('')}</select>
+        <select data-k="${k}" data-s="m" aria-label="الشهر الهجري"><option value="">الشهر</option>${LISTS.hijriMonths.map((n, i) => `<option value="${i + 1}">${esc(n)}</option>`).join('')}</select>
+        <select data-k="${k}" data-s="y" aria-label="السنة الهجرية"><option value="">السنة</option>${LISTS.hijriYears.map(y => `<option>${y}</option>`).join('')}</select></div>
+        <div class="dayname" data-dn="${k}"></div>
+        <div class="duo"><select data-k="${k}" data-s="week" aria-label="الأسبوع"><option value="">الأسبوع</option>${LISTS.weeks.map(w => `<option value="${esc(w)}">الأسبوع ${esc(w)}</option>`).join('')}</select>
+        <button type="button" class="btn" data-today="${k}">تاريخ اليوم</button></div></div>`;
       case 'number': return `<input id="${id}" data-k="${k}" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="0">`;
       case 'textarea': return `<textarea id="${id}" data-k="${k}" rows="4" maxlength="${f.max || 500}" placeholder="${esc(f.ph || '')}"></textarea>`;
       case 'checks': return `<div class="checks">${f.options.map(o => `<label class="chk"><input type="checkbox" data-k="${k}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join('')}</div>`;
       default: return `<input id="${id}" data-k="${k}" type="text" maxlength="${f.max || 100}" placeholder="${esc(f.ph || '')}" autocomplete="off"${f.options ? ` list="dl_${k}"` : ''}>${f.options ? `<datalist id="dl_${k}">${opts(f.options)}</datalist>` : ''}`;
     }
   }
+  // التاريخ الهجري: عدد أيام الشهر واسم اليوم تلقائياً
+  const dateInfo = v => (v && v.y && v.m && v.d) ? HIJRI.info(+v.y, +v.m, +v.d) : null;
+  const dateWrap = k => $(`[data-f="${k}"]`, $('#form'));
+  function refreshDays(k) {
+    const w = dateWrap(k), sd = $('[data-s="d"]', w), y = $('[data-s="y"]', w).value, m = $('[data-s="m"]', w).value, cur = sd.value;
+    const n = (y && m) ? HIJRI.maxDay(+y, +m) : 30;
+    sd.innerHTML = '<option value="">اليوم</option>' + Array.from({ length: n }, (_, i) => `<option>${i + 1}</option>`).join('');
+    if (cur && +cur <= n) sd.value = cur;
+  }
+  function updateDayName(k) {
+    const el = $(`[data-dn="${k}"]`, $('#form')), inf = dateInfo(state.data[k]);
+    el.classList.toggle('on', !!inf);
+    el.textContent = inf ? 'اليوم: ' + LISTS.weekdays[inf.wd] : 'يظهر اسم اليوم تلقائياً بعد اختيار التاريخ';
+  }
+  function fillDate(k) {
+    const v = state.data[k] || {}, w = dateWrap(k), g = s => $(`[data-s="${s}"]`, w);
+    g('y').value = v.y || ''; g('m').value = v.m || ''; refreshDays(k); g('d').value = v.d || ''; g('week').value = v.week || '';
+    updateDayName(k);
+  }
+
   // لوحة التوقيع (سبورة): يرسم المستخدم توقيعه فيظهر في البطاقة
   const sigHTML = t => `<fieldset class="grp"><legend>التوقيعات</legend><p class="hint">وقّع بالإصبع أو بالماوس داخل المربع، ويظهر توقيعك في البطاقة مباشرة.</p><div class="pads">${t.signatures.map((s, i) => s.manual ? '' :
     `<div class="padbox"><div class="padhead"><strong>${esc(s.role)}</strong><button type="button" class="btn sm" data-clrsig="${i}">مسح التوقيع</button></div><canvas class="pad" data-sig="${i}" width="640" height="220" aria-label="لوحة توقيع ${esc(s.role)}"></canvas></div>`).join('')}</div></fieldset>`;
@@ -478,7 +581,7 @@ const CARD_TYPES = {
     const t = CARD_TYPES[state.type], d = state.data;
     Object.entries(t.fields).forEach(([k, f]) => {
       const els = $$(`[data-k="${k}"]`, $('#form'));
-      if (f.type === 'date') els.forEach(e => e.value = (d[k] || {})[e.dataset.s] || '');
+      if (f.type === 'date') fillDate(k);
       else if (f.type === 'checks') els.forEach(e => e.checked = (d[k] || []).includes(e.value));
       else els[0].value = d[k] || '';
     });
@@ -492,6 +595,10 @@ const CARD_TYPES = {
         const w = $(`[data-f="${k}"]`, $('#form')); w.classList.add('bad'); $('.err', w).textContent = 'هذا الحقل مطلوب'; first = first || w;
       }
     });
+    if (t.fields.start && t.fields.end) {
+      const a = dateInfo(state.data.start), b = dateInfo(state.data.end);
+      if (a && b && b.ord < a.ord) { const w = dateWrap('end'); w.classList.add('bad'); $('.err', w).textContent = 'تاريخ نهاية التنفيذ قبل تاريخ البداية'; first = first || w; }
+    }
     if (first) { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); toast('أكمل الحقول المطلوبة ثم أعد المحاولة', 'err'); return false; }
     return true;
   }
@@ -502,7 +609,10 @@ const CARD_TYPES = {
     const t = CARD_TYPES[type], S = SCHOOL_CONFIG;
     const val = k => {
       const f = t.fields[k], v = d[k];
-      if (f.type === 'date') return `<span class="dp"><i>اليوم:</i> ${esc(v.day)}</span><span class="dp"><i>الأسبوع:</i> ${esc(v.week)}</span>`;
+      if (f.type === 'date') {
+        const inf = dateInfo(v), wk = LISTS.weeks.indexOf(v.week) >= 0 ? v.week : '';
+        return `<div class="dates"><span class="dp"><i>اليوم:</i> ${inf ? LISTS.weekdays[inf.wd] : ''}</span><span class="dp"><i>التاريخ:</i> ${inf ? (+v.d) + ' ' + LISTS.hijriMonths[v.m - 1] + ' ' + (+v.y) + 'هـ' : ''}</span><span class="dp"><i>الأسبوع:</i> ${esc(wk)}</span></div>`;
+      }
       if (f.type === 'checks') return `<div class="cks">${f.options.map(o => `<span class="ck${v.includes(o) ? ' on' : ''}"><b></b>${esc(o)}</span>`).join('')}</div>`;
       return esc(String(v).trim()).replace(/\n/g, '<br>');
     };
@@ -550,11 +660,11 @@ const CARD_TYPES = {
   /* ---------- التنقل ---------- */
   function openEditor(type, rec) {
     state.type = type; state.id = rec ? rec.id : null; state.zoomed = false;
+    $('#home').hidden = true; $('#editor').hidden = false; // يظهر المحرر أولاً ليُقاس عرض المعاينة بشكل صحيح
     const t = CARD_TYPES[type];
     state.data = Object.assign(emptyData(t), rec ? JSON.parse(JSON.stringify(rec.data)) : {});
     $('#edTitle').textContent = t.title;
-    buildForm(); fillForm(); renderPreview();
-    $('#home').hidden = true; $('#editor').hidden = false; window.scrollTo(0, 0);
+    buildForm(); fillForm(); renderPreview(); window.scrollTo(0, 0);
   }
   function goHome() { $('#editor').hidden = true; $('#home').hidden = false; renderHome(); window.scrollTo(0, 0); }
 
@@ -610,7 +720,19 @@ const CARD_TYPES = {
   document.addEventListener('click', async e => {
     const b = e.target.closest('button'); if (!b) return;
     const ds = b.dataset;
-    if (ds.clrsig != null) { state.data['sig_' + ds.clrsig] = ''; fillPads(); renderPreview(); saveDraft(); }
+    if (ds.today) {
+      let ok = false;
+      try {
+        const p = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'numeric', year: 'numeric' }).formatToParts(new Date());
+        const g = t => +p.find(x => x.type === t).value;
+        if (HIJRI.info(g('year'), g('month'), g('day'))) {
+          state.data[ds.today] = Object.assign(state.data[ds.today], { y: String(g('year')), m: String(g('month')), d: String(g('day')) });
+          fillDate(ds.today); readForm(); updateDayName(ds.today); renderPreview(); saveDraft(); ok = true;
+        }
+      } catch (x) { }
+      if (!ok) toast('تاريخ اليوم خارج السنوات المسموحة، اختر التاريخ من القوائم', 'err');
+    }
+    else if (ds.clrsig != null) { state.data['sig_' + ds.clrsig] = ''; fillPads(); renderPreview(); saveDraft(); }
     else if (ds.new) openEditor(ds.new);
     else if (ds.open) { const r = getCards().find(c => c.id === ds.open); if (r) openEditor(r.type, r); }
     else if (ds.dup) {
@@ -641,7 +763,10 @@ const CARD_TYPES = {
     const t = e.target;
     if (t.dataset.k && CARD_TYPES[state.type].fields[t.dataset.k].type === 'number') t.value = normDigits(t.value);
     const w = t.closest('.f'); if (w) { w.classList.remove('bad'); $('.err', w).textContent = ''; }
-    readForm(); renderPreview(); saveDraft();
+    const k = t.dataset.k, isDate = k && CARD_TYPES[state.type].fields[k].type === 'date';
+    if (isDate && (t.dataset.s === 'm' || t.dataset.s === 'y')) refreshDays(k);
+    readForm(); if (isDate) updateDayName(k);
+    renderPreview(); saveDraft();
   });
   window.addEventListener('resize', fitPreview);
   if (window.ResizeObserver) new ResizeObserver(fitPreview).observe($('#frame'));
